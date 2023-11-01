@@ -1,6 +1,9 @@
-const express = require('express');
+import cors from 'cors';
+import express from 'express';
+import { databaseConnect } from '../database/db.js';
+import userRoutes from './routes/user.routes.js';
+const PORT = 3000;
 const app = express();
-const cors = require('cors');
 
 // Rutas
 
@@ -9,5 +12,12 @@ app.use(cors());
 app.use(express.json());
 
 // Uso de rutas
+app.use('/api', userRoutes);
 
-app.listen(3000, () => console.log('Servidor en ejecución en el puerto 3000'));
+// Inicio del servidor
+const startServer = async () => {
+  await databaseConnect();
+  app.listen(PORT, console.log(`Server listen on port ${PORT}`));
+};
+
+startServer();
