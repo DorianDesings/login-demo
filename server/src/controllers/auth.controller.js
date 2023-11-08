@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { createAccessToken } from '../../utils/jsw.js';
 import UserModel from '../models/user.model.js';
+const TOKEN_SECRET = 'secret';
 
 const register = async (req, res) => {
   const { username, email, password } = req.body;
@@ -47,11 +49,7 @@ const login = async (req, res) => {
       username: userFound.username
     });
 
-    res.cookie('token', token, {
-      httpOnly: process.env.NODE_ENV !== 'development',
-      secure: true,
-      sameSite: 'none'
-    });
+    res.cookie('token', token);
 
     res.json({
       id: userFound._id,
@@ -63,4 +61,22 @@ const login = async (req, res) => {
   }
 };
 
-export { login, register };
+const verifyToken = async (req, res) => {
+  const { token } = req.cookies;
+  if (!token) return res.send(false);
+
+  jwt.verify(token, TOKEN_SECRET, async (error, user) => {
+    if (error) return res.sendStatus(401);
+
+    const userFound = await UserModel.findById(user.id);
+    if (!userFound) return res.sendStatus(401);
+
+    return res.json({
+      id: userFound._id,
+      username: userFound.username,
+      email: userFound.email
+    });
+  });
+};
+
+export { login, register, verifyToken };
